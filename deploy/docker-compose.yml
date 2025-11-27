@@ -1,0 +1,73 @@
+# =============================================================================
+# Docker Compose 服务编排
+# 目的：定义开发环境所需的基础设施服务 (DB, Redis, MinIO)。
+# 权衡：
+# 1. 使用本地卷 (Bind Mounts) ./volumes 而非 Docker Volume，便于开发者直接查看和清理数据。
+# 2. 显式定义 Healthcheck，确保 backend 服务在依赖就绪后再启动 (Fail-Fast 策略)。
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # 关系型数据库：PostgreSQL 16
+  # 作用：存储 User, Music, Album 等核心业务元数据。
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: always
+    volumes:
+      - ./volumes/postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=flowbeat
+      - POSTGRES_PASSWORD=flowbeat_dev_pass
+      - POSTGRES_DB=flowbeat_db
+    ports:
+      - "5432:5432" # 暴露端口供宿主机 DBeaver/DataGrip 连接
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U flowbeat" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 缓存与消息中间件：Redis 7
+  # 作用：
+  # 1. Celery 异步任务的消息代理 (Broker) 和结果后端 (Backend)。
+  # 2. 缓存推荐结果 (Top-K List) 以实现毫秒级读取。
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - ./volumes/redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # 对象存储：MinIO (S3 Compatible)
+  # 作用：存储音频文件 (.mp3, .flac) 和封面图片。
+  # 优势：在本地模拟 AWS S3 API，实现开发与生产环境的无缝切换。
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    restart: always
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./volumes/minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000" # S3 API 端口
+      - "9001:9001" # Web 控制台端口
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3

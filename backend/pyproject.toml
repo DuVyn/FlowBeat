@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "flowbeat-backend"
+version = "0.1.0"
+description = "FlowBeat Music Streaming & Recommendation System Backend"
+authors = ["FlowBeat Team"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+# Web 框架: 使用 FastAPI 构建高性能异步 API
+fastapi = "^0.109.0"
+# ASGI 服务器: Uvicorn 是生产级的 ASGI 服务器
+uvicorn = { extras = ["standard"], version = "^0.27.0" }
+# 多部分解析: 用于文件上传
+python-multipart = "^0.0.9"
+# 邮箱验证: 这里的 v2.1.0 提供了更严格的 RFC 校验
+email-validator = "^2.1.0"
+
+# 数据库与 ORM: 全链路异步栈
+# SQLAlchemy 2.0+ 原生支持 async/await
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.25" }
+# 数据库迁移工具
+alembic = "^1.13.1"
+# PostgreSQL 异步驱动，性能远超 psycopg2
+asyncpg = "^0.29.0"
+
+# 配置管理: Pydantic V2 提供了极强的性能和类型安全性
+pydantic = "^2.6.0"
+pydantic-settings = "^2.1.0"
+
+# 认证与安全
+# Python-jose 处理 JWT 编解码
+python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+# Passlib 处理密码哈希 (Bcrypt)
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
+
+# 工具库
+httpx = "^0.26.0"
+python-slugify = "^8.0.1"
+
+[tool.poetry.group.dev.dependencies]
+# 测试框架
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.5"
+# 代码格式化与 Lint
+black = "^24.1.1"
+isort = "^5.13.2"
+pre-commit = "^3.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
