@@ -11,8 +11,7 @@ class Base(DeclarativeBase):
     """
 
     # [自动化命名策略]
-    # 为什么这么写:
-    # 默认表名通常需要手动指定 __tablename__。
+    # 为什么这么写: 默认表名通常需要手动指定 __tablename__。
     # 这里利用反射机制，将驼峰命名的类名 (如 UserProfile) 自动转换为蛇形表名 (user_profile)。
     # 优势: 减少样板代码，强制统一数据库命名规范。
     @declared_attr.directive
