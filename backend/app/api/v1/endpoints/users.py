@@ -145,10 +145,23 @@ async def update_user_me(
     # 为什么在这里检查而非 Schema 层:
     # Schema 层负责数据结构定义，权限控制应在 API 层实现。
     # 这样管理员接口可以复用同一个 Schema 但允许修改角色。
-    if user_update.role is not None:
+    #
+    # 为什么使用 model_fields_set 而非 is not None:
+    # Pydantic 的 model_fields_set 属性记录了请求体中**实际传入**的字段集合。
+    # 如果检查 `user_update.role is not None`，当 Swagger UI 或前端自动填充
+    # role 字段的默认值时（如 "USER"），即使用户无意修改角色也会触发拦截。
+    # 使用 model_fields_set 可以精确判断用户是否**主动提交**了 role 字段，
+    # 避免误拒合法请求，同时仍能阻止真正的提权尝试。
+    if "role" in user_update.model_fields_set:
         raise HTTPException(
             status_code=403,
             detail="禁止修改用户角色",
+        )
+    # 同理，禁止普通用户修改 is_active 字段
+    if "is_active" in user_update.model_fields_set:
+        raise HTTPException(
+            status_code=403,
+            detail="禁止修改账户激活状态",
         )
 
     # 执行更新
