@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserUpdateMe
 from app.services.auth_service import auth_service
 
 router = APIRouter()
@@ -28,9 +28,9 @@ router = APIRouter()
 
 @router.post("/", response_model=UserResponse)
 async def register_user(
-    *,
-    db: Annotated[AsyncSession, Depends(deps.get_db)],
-    user_in: UserCreate,
+        *,
+        db: Annotated[AsyncSession, Depends(deps.get_db)],
+        user_in: UserCreate,
 ) -> Any:
     """
     用户注册接口
@@ -71,7 +71,7 @@ async def register_user(
 
 @router.get("/me", response_model=UserResponse)
 async def read_user_me(
-    current_user: Annotated[User, Depends(deps.get_current_user)],
+        current_user: Annotated[User, Depends(deps.get_current_user)],
 ) -> Any:
     """
     获取当前登录用户的个人资料
@@ -99,10 +99,10 @@ async def read_user_me(
 
 @router.patch("/me", response_model=UserResponse)
 async def update_user_me(
-    *,
-    db: Annotated[AsyncSession, Depends(deps.get_db)],
-    user_update: UserUpdate,
-    current_user: Annotated[User, Depends(deps.get_current_user)],
+        *,
+        db: Annotated[AsyncSession, Depends(deps.get_db)],
+        user_update: UserUpdateMe,
+        current_user: Annotated[User, Depends(deps.get_current_user)],
 ) -> Any:
     """
     更新当前用户的个人资料
@@ -140,29 +140,6 @@ async def update_user_me(
     """
     # 实例化仓储
     repo = UserRepository()
-
-    # 安全检查: 拒绝角色提权请求
-    # 为什么在这里检查而非 Schema 层:
-    # Schema 层负责数据结构定义，权限控制应在 API 层实现。
-    # 这样管理员接口可以复用同一个 Schema 但允许修改角色。
-    #
-    # 为什么使用 model_fields_set 而非 is not None:
-    # Pydantic 的 model_fields_set 属性记录了请求体中**实际传入**的字段集合。
-    # 如果检查 `user_update.role is not None`，当 Swagger UI 或前端自动填充
-    # role 字段的默认值时（如 "USER"），即使用户无意修改角色也会触发拦截。
-    # 使用 model_fields_set 可以精确判断用户是否**主动提交**了 role 字段，
-    # 避免误拒合法请求，同时仍能阻止真正的提权尝试。
-    if "role" in user_update.model_fields_set:
-        raise HTTPException(
-            status_code=403,
-            detail="禁止修改用户角色",
-        )
-    # 同理，禁止普通用户修改 is_active 字段
-    if "is_active" in user_update.model_fields_set:
-        raise HTTPException(
-            status_code=403,
-            detail="禁止修改账户激活状态",
-        )
 
     # 执行更新
     # BaseRepository.update 会自动处理 exclude_unset=True，

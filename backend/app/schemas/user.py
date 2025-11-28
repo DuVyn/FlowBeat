@@ -93,6 +93,29 @@ class UserCreate(UserBase):
     )
 
 
+class UserUpdateMe(BaseModel):
+    """
+    [新增] 用户自助更新请求体
+
+    设计目的:
+    遵循接口隔离原则 (ISP)，仅暴露用户有权修改的字段。
+
+    安全收益:
+    1. 物理隔离: 根本不存在 role/is_active 字段，彻底根除批量赋值攻击风险。
+    2. 文档清晰: Swagger/OpenAPI 不会再显示 role 字段，消除前端误解。
+    3. 容错性: 若前端意外传入 role 字段，Pydantic 默认会忽略它(extra='ignore')，
+       而不会像之前那样抛出 403 错误，解决了当前的 BUG。
+    """
+    email: Optional[EmailStr] = Field(None, description="新邮箱地址")
+    username: Optional[str] = Field(None, min_length=3, max_length=50, description="新用户名")
+    full_name: Optional[str] = Field(None, max_length=100, description="新的全名或昵称")
+    password: Optional[str] = Field(None, min_length=8, max_length=100, description="新密码")
+
+    # 显式禁止传入额外字段 (可选配置，若设为 'forbid' 则前端传 role 会报 422)
+    # 生产环境通常默认 'ignore' 以保持兼容性
+    model_config = ConfigDict(extra='ignore')
+
+
 class UserUpdate(BaseModel):
     """
     用户资料更新请求体
