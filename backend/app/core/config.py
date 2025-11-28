@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     # asyncpg 是目前性能最高的 PostgreSQL 异步驱动，比 psycopg2 快 3-5 倍。
     # 配合 SQLAlchemy 2.0 的原生异步支持，可以充分发挥 FastAPI 的异步优势。
     SQLALCHEMY_DATABASE_URI: str = (
-        "postgresql+asyncpg://flowbeat:flowbeat_dev_pass@localhost:5432/flowbeat"
+        "postgresql+asyncpg://flowbeat:flowbeat_dev_pass@localhost:5432/flowbeat_db"
     )
 
     # =========================================================================
