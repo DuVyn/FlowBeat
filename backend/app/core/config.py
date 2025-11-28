@@ -89,8 +89,12 @@ class Settings(BaseSettings):
     # 为什么使用 asyncpg 驱动:
     # asyncpg 是目前性能最高的 PostgreSQL 异步驱动，比 psycopg2 快 3-5 倍。
     # 配合 SQLAlchemy 2.0 的原生异步支持，可以充分发挥 FastAPI 的异步优势。
+    #
+    # 数据库名称说明:
+    # 此处的数据库名 flowbeat_db 必须与 docker-compose.yml 中 POSTGRES_DB 配置一致。
+    # 若不一致，asyncpg 会抛出 InvalidCatalogNameError: database "xxx" does not exist。
     SQLALCHEMY_DATABASE_URI: str = (
-        "postgresql+asyncpg://flowbeat:flowbeat_dev_pass@localhost:5432/flowbeat"
+        "postgresql+asyncpg://flowbeat:flowbeat_dev_pass@localhost:5432/flowbeat_db"
     )
 
     # =========================================================================
