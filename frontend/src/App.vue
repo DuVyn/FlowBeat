@@ -1,11 +1,27 @@
 <script setup lang="ts">
-// 这里目前是空的，后续会用来配置路由占位符 <router-view>
+import {NConfigProvider, NMessageProvider, NDialogProvider, NGlobalStyle} from 'naive-ui';
+import {useTheme} from '@/composables/useTheme';
+
+const {theme} = useTheme();
 </script>
 
 <template>
-  <h1>FlowBeat Frontend Init</h1>
+  <n-config-provider :theme="theme">
+    <n-global-style/>
+    <n-message-provider>
+      <n-dialog-provider>
+        <router-view/>
+      </n-dialog-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 
-<style scoped>
-/* 这里暂时留空 */
+<style>
+/* 全局重置样式 */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
 </style>
