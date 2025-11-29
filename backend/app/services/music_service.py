@@ -56,9 +56,10 @@ class MusicService:
         object_name = f"music/{uuid.uuid4()}.{file_ext}"
 
         # 获取文件大小 (需移动指针到末尾再复位)
-        await file.seek(0, 2)
-        file_size = await file.tell()
-        await file.seek(0)
+        # 使用底层的 SpooledTemporaryFile 对象进行 seek 操作，因为它支持 whence 参数
+        file.file.seek(0, 2)
+        file_size = file.file.tell()
+        file.file.seek(0)
 
         uploaded_url = ""
 
