@@ -58,6 +58,8 @@ argon2-cffi = "^23.1.0"
 # =============================================================================
 httpx = "^0.26.0"
 python-slugify = "^8.0.1"
+# MinIO 官方 Python 客户端 SDK
+minio = "^7.2.4"
 
 [tool.poetry.group.dev.dependencies]
 # 测试框架

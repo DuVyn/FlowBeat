@@ -126,6 +126,20 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # =========================================================================
+    # 6. 对象存储 (MinIO / S3)
+    # =========================================================================
+    # MinIO 服务地址 (如 minio:9000)
+    MINIO_ENDPOINT: str = "localhost:9000"
+    # Access Key (用户名)
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    # Secret Key (密码)
+    MINIO_SECRET_KEY: str = "minioadmin"
+    # 存储桶名称
+    MINIO_BUCKET_NAME: str = "flowbeat-music"
+    # 是否使用 SSL (本地开发通常为 False)
+    MINIO_SECURE: bool = False
+
 
 # =============================================================================
 # 单例实例化

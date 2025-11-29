@@ -21,3 +21,29 @@ export interface User {
     // 头像字段可能为空，后续阶段对接 MinIO 后使用
     avatar_url?: string | null;
 }
+
+export interface Artist {
+    id: number;
+    name: string;
+    bio?: string;
+    avatar_url?: string;
+}
+
+export interface Album {
+    id: number;
+    title: string;
+    release_date: string;
+    artist_id: number;
+    cover_url?: string;
+    artist?: Artist; // 嵌套对象
+}
+
+export interface Music {
+    id: number;
+    title: string;
+    duration: number;
+    track_number: number;
+    file_url: string;
+    album_id: number;
+    album?: Album;   // 嵌套对象
+}

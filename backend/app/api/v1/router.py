@@ -8,15 +8,11 @@ API V1 路由聚合模块
     /api/v1/auth/...      - 认证相关接口
     /api/v1/users/...     - 用户管理接口
 
-扩展指南:
-    新增模块时，只需:
-    1. 在 endpoints/ 下创建新的路由文件
-    2. 在此处导入并注册到 api_router
 """
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, users
+from app.api.v1.endpoints import auth, music, users
 
 # 创建 V1 版本的主路由器
 api_router = APIRouter()
@@ -41,4 +37,11 @@ api_router.include_router(
     users.router,
     prefix="/users",
     tags=["users"],
+)
+
+# 音乐资源路由
+api_router.include_router(
+    music.router,
+    prefix="/music",
+    tags=["music"],
 )
