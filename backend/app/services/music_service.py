@@ -45,11 +45,14 @@ class MusicService:
             Music: 创建成功的音乐实体
         """
         # 1. 基础校验
-        if not file.content_type.startswith("audio/"):
+        if not file.content_type or not file.content_type.startswith("audio/"):
             raise BusinessError("仅支持上传音频文件")
 
         # 生成唯一文件名，防止覆盖: uuid + 原始扩展名
-        file_ext = file.filename.split(".")[-1]
+        # 当 filename 为 None 或不包含扩展名时，使用默认扩展名
+        file_ext = "mp3"  # 默认扩展名
+        if file.filename and "." in file.filename:
+            file_ext = file.filename.split(".")[-1]
         object_name = f"music/{uuid.uuid4()}.{file_ext}"
 
         # 获取文件大小 (需移动指针到末尾再复位)
@@ -83,6 +86,9 @@ class MusicService:
 
         except Exception as e:
             # 5. 补偿事务 (Compensating Transaction)
+            # 先回滚数据库事务，确保会话状态一致
+            await db.rollback()
+
             # 如果 MinIO 上传成功了，但后续 DB 操作失败 (如外键错误)，必须删除 MinIO 文件
             if uploaded_url:
                 print(f"检测到事务失败，正在回滚 MinIO 文件: {uploaded_url}")
