@@ -4,9 +4,6 @@ import Sidebar from './Sidebar.vue';
 import Header from './Header.vue';
 import AudioPlayer from '@/components/player/AudioPlayer.vue';
 import PlayList from '@/components/player/PlayList.vue';
-import {usePlayerStore} from '@/stores/playerStore';
-
-const playerStore = usePlayerStore();
 </script>
 
 <template>
@@ -15,7 +12,7 @@ const playerStore = usePlayerStore();
       <Header/>
     </n-layout-header>
 
-    <n-layout has-sider position="absolute" style="top: 64px;" :style="{ bottom: playerStore.currentTrack ? '80px' : '0' }">
+    <n-layout has-sider position="absolute" style="top: 64px; bottom: 80px;">
       <n-layout-sider
           bordered
           width="240"
