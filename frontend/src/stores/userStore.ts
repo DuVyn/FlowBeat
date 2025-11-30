@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia';
 import {ref, computed} from 'vue';
-import type {User, UserRole} from '@/types/entity';
+import type {User} from '@/types/entity';
 import type {LoginRequest, RegisterRequest, TokenResponse} from '@/types/api';
 // 暂时直接引入 axios 实例用于 API 调用，后续会将 API 调用逻辑抽离到 src/api/auth.ts
 // 但为了保持 Store 的自包含性，此处设计为 Store 调用 API 层（下一步实现 API 层）
