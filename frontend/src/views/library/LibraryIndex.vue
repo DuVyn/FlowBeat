@@ -17,18 +17,22 @@ import {
   NIcon,
   useMessage,
   NPopconfirm,
+  NDropdown,
   type DataTableColumns
 } from 'naive-ui';
-import {CloudUploadOutline as UploadIcon, Refresh as RefreshIcon, Play as PlayIcon} from '@vicons/ionicons5';
+import {CloudUploadOutline as UploadIcon, Refresh as RefreshIcon, Play as PlayIcon, Add as AddIcon} from '@vicons/ionicons5';
 import {musicApi} from '@/api/music';
 import {useUserStore} from '@/stores/userStore';
 import {usePlayerStore} from '@/stores/playerStore';
+import {usePlaylistStore} from '@/stores/playlistStore';
 import type {Music} from '@/types/entity';
 import UploadModal from './UploadModal.vue';
+import LikeButton from '@/components/common/LikeButton.vue';
 
 // --- State ---
 const userStore = useUserStore();
 const playerStore = usePlayerStore();
+const playlistStore = usePlaylistStore();
 const message = useMessage();
 
 const loading = ref(false);
@@ -76,9 +80,35 @@ const handleDelete = async (id: number) => {
   }
 };
 
-// 播放处理函数
+// 播放处理函数 - 将当前页面所有歌曲添加到播放列表，从点击的歌曲开始播放
 const handlePlay = (track: Music) => {
-  playerStore.playTrack(track);
+  const startIndex = musicList.value.findIndex(m => m.id === track.id);
+  playerStore.setPlaylist(musicList.value, startIndex >= 0 ? startIndex : 0);
+};
+
+// 添加到歌单
+const handleAddToPlaylist = async (musicId: number, playlistId: number) => {
+  try {
+    await playlistStore.addSongToPlaylist(playlistId, musicId);
+    message.success('已添加到歌单');
+  } catch (error: any) {
+    if (error?.response?.data?.detail?.includes('已在歌单中')) {
+      message.warning('歌曲已在歌单中');
+    } else {
+      message.error('添加失败');
+    }
+  }
+};
+
+// 获取歌单下拉选项
+const getPlaylistOptions = (musicId: number) => {
+  return playlistStore.playlists.map(p => ({
+    label: p.name,
+    key: p.id,
+    props: {
+      onClick: () => handleAddToPlaylist(musicId, p.id)
+    }
+  }));
 };
 
 const columns: DataTableColumns<Music> = [
@@ -141,9 +171,16 @@ const columns: DataTableColumns<Music> = [
   {
     title: '操作',
     key: 'actions',
-    width: 150,
+    width: 250,
     render(row) {
       const buttons = [];
+
+      // 收藏按钮 - 所有用户可见
+      buttons.push(
+          h(LikeButton, {
+            musicId: row.id
+          })
+      );
 
       // 播放按钮 - 所有用户可见
       buttons.push(
@@ -157,6 +194,24 @@ const columns: DataTableColumns<Music> = [
             default: () => '播放'
           })
       );
+
+      // 添加到歌单按钮
+      if (playlistStore.playlists.length > 0) {
+        buttons.push(
+          h(NDropdown, {
+            options: getPlaylistOptions(row.id),
+            trigger: 'click'
+          }, {
+            default: () => h(NButton, {
+              size: 'small',
+              quaternary: true
+            }, {
+              icon: () => h(NIcon, null, {default: () => h(AddIcon)}),
+              default: () => '添加到歌单'
+            })
+          })
+        );
+      }
 
       // 权限控制：仅管理员显示删除按钮
       if (userStore.isAdmin) {
@@ -174,7 +229,7 @@ const columns: DataTableColumns<Music> = [
         );
       }
 
-      return h(NSpace, null, {default: () => buttons});
+      return h(NSpace, {align: 'center'}, {default: () => buttons});
     }
   }
 
@@ -211,6 +266,7 @@ const handleUploadSuccess = () => {
 
 onMounted(() => {
   loadData();
+  playlistStore.fetchPlaylists();
 });
 </script>
 

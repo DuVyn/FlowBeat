@@ -197,5 +197,80 @@ class MusicService:
             music_id=music_id,
         )
 
+    async def get_user_liked_music(
+            self,
+            db: AsyncSession,
+            user_id: UUID,
+            skip: int = 0,
+            limit: int = 100,
+    ) -> tuple[list[Music], int]:
+        """
+        获取用户收藏的音乐列表
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+            skip: 跳过的记录数
+            limit: 返回数量限制
+
+        Returns:
+            tuple[list[Music], int]: 音乐列表和总数
+        """
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        from app.models.music import Album
+
+        # 获取总数
+        total = await interaction_repository.count_user_liked_music(db, user_id)
+
+        # 获取收藏的音乐 ID 列表
+        music_ids = await interaction_repository.get_user_liked_music_ids(
+            db=db,
+            user_id=user_id,
+            skip=skip,
+            limit=limit,
+        )
+
+        if not music_ids:
+            return [], total
+
+        # 查询音乐详情
+        stmt = (
+            select(Music)
+            .options(selectinload(Music.album).selectinload(Album.artist))
+            .where(Music.id.in_(music_ids))
+        )
+        result = await db.execute(stmt)
+        items = list(result.scalars().all())
+
+        # 按照 music_ids 的顺序排序
+        id_to_music = {m.id: m for m in items}
+        sorted_items = [id_to_music[mid] for mid in music_ids if mid in id_to_music]
+
+        return sorted_items, total
+
+    async def remove_user_like(
+            self,
+            db: AsyncSession,
+            user_id: UUID,
+            music_id: int,
+    ) -> bool:
+        """
+        取消用户对某音乐的收藏
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+            music_id: 音乐 ID
+
+        Returns:
+            bool: 是否成功删除
+        """
+        return await interaction_repository.remove_user_like(
+            db=db,
+            user_id=user_id,
+            music_id=music_id,
+        )
+
 
 music_service = MusicService()

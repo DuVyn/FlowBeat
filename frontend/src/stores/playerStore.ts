@@ -59,6 +59,9 @@ export const usePlayerStore = defineStore('player', () => {
     // 播放列表抽屉是否可见
     const isPlaylistVisible = ref(false);
 
+    // 是否应该自动播放 (区分用户主动切歌和页面初始化/账号切换)
+    const shouldAutoPlay = ref(false);
+
     // ==========================================================================
     // 计算属性
     // ==========================================================================
@@ -108,6 +111,7 @@ export const usePlayerStore = defineStore('player', () => {
         if (tracks.length > 0 && startIndex >= 0 && startIndex < tracks.length) {
             currentIndex.value = startIndex;
             currentTrack.value = tracks[startIndex] ?? null;
+            shouldAutoPlay.value = true; // 用户主动设置播放列表，应该自动播放
         } else {
             currentIndex.value = -1;
             currentTrack.value = null;
@@ -192,6 +196,7 @@ export const usePlayerStore = defineStore('player', () => {
             currentIndex.value = index;
         }
         currentTrack.value = track;
+        shouldAutoPlay.value = true; // 用户主动播放，应该自动播放
     };
 
     /**
@@ -234,6 +239,7 @@ export const usePlayerStore = defineStore('player', () => {
 
         currentIndex.value = nextIndex;
         currentTrack.value = playlist.value[nextIndex] ?? null;
+        shouldAutoPlay.value = true; // 用户主动切歌，应该自动播放
         return currentTrack.value;
     };
 
@@ -276,6 +282,7 @@ export const usePlayerStore = defineStore('player', () => {
 
         currentIndex.value = prevIndex;
         currentTrack.value = playlist.value[prevIndex] ?? null;
+        shouldAutoPlay.value = true; // 用户主动切歌，应该自动播放
         return currentTrack.value;
     };
 
@@ -313,6 +320,7 @@ export const usePlayerStore = defineStore('player', () => {
         if (index >= 0 && index < playlist.value.length) {
             currentIndex.value = index;
             currentTrack.value = playlist.value[index] ?? null;
+            shouldAutoPlay.value = true; // 用户主动跳转，应该自动播放
         }
     };
 
@@ -324,6 +332,7 @@ export const usePlayerStore = defineStore('player', () => {
         playMode,
         isPlaying,
         isPlaylistVisible,
+        shouldAutoPlay,
 
         // 计算属性
         isEmpty,

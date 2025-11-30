@@ -131,3 +131,50 @@ class LikeStatusResponse(BaseModel):
     用于前端查询用户是否已收藏某音乐。
     """
     liked: bool
+
+
+# --- Playlist Schemas ---
+
+class PlaylistBase(BaseModel):
+    """歌单基础信息"""
+    name: str = Field(..., max_length=100, description="歌单名称")
+    description: Optional[str] = Field(None, description="歌单描述")
+
+
+class PlaylistCreate(PlaylistBase):
+    """创建歌单请求"""
+    pass
+
+
+class PlaylistUpdate(BaseModel):
+    """更新歌单请求"""
+    name: Optional[str] = Field(None, max_length=100, description="歌单名称")
+    description: Optional[str] = Field(None, description="歌单描述")
+
+
+class PlaylistResponse(PlaylistBase):
+    """歌单响应"""
+    id: int
+    user_id: str
+    cover_url: Optional[str] = None
+    song_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlaylistDetailResponse(PlaylistResponse):
+    """歌单详情响应（包含歌曲列表）"""
+    songs: List[MusicResponse] = []
+
+
+class PlaylistListResponse(BaseModel):
+    """歌单列表响应"""
+    items: List[PlaylistResponse]
+    total: int
+
+
+class AddSongToPlaylistRequest(BaseModel):
+    """添加歌曲到歌单请求"""
+    music_id: int = Field(..., description="音乐ID")

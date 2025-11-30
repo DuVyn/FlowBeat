@@ -5,6 +5,7 @@ import type {LoginRequest, RegisterRequest, TokenResponse} from '@/types/api';
 // 暂时直接引入 axios 实例用于 API 调用，后续会将 API 调用逻辑抽离到 src/api/auth.ts
 // 但为了保持 Store 的自包含性，此处设计为 Store 调用 API 层（下一步实现 API 层）
 import apiService from '@/api/axios';
+import {usePlayerStore} from '@/stores/playerStore';
 
 // 定义 LocalStorage Key 常量，避免硬编码
 const TOKEN_KEY = 'flowbeat_token';
@@ -95,12 +96,15 @@ export const useUserStore = defineStore('user', () => {
 
     /**
      * 登出动作
-     * @description 清除状态和本地存储，重置路由状态
+     * @description 清除状态和本地存储，重置路由状态，清空播放器
      */
     function logout() {
         token.value = null;
         userInfo.value = null;
         localStorage.removeItem(TOKEN_KEY);
+        // 清空播放器状态，防止切换账号后自动播放
+        const playerStore = usePlayerStore();
+        playerStore.clearPlaylist();
         // 这里通常会结合 Router 跳转到 /login，将在组件层或 Router Guard 中处理
     }
 

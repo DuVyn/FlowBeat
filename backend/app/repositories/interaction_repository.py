@@ -156,6 +156,97 @@ class InteractionRepository(BaseRepository[Interaction, Any, Any]):
         result = await db.execute(stmt)
         return result.scalar_one_or_none() is not None
 
+    async def get_user_liked_music_ids(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[int]:
+        """
+        获取用户收藏的音乐 ID 列表
+
+        用于查询用户收藏的歌曲。
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+            skip: 跳过的记录数
+            limit: 返回数量限制
+
+        Returns:
+            List[int]: 音乐 ID 列表
+        """
+        stmt = (
+            select(Interaction.music_id)
+            .where(
+                Interaction.user_id == str(user_id),
+                Interaction.interaction_type == InteractionType.LIKE,
+            )
+            .order_by(Interaction.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .distinct()
+        )
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def count_user_liked_music(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+    ) -> int:
+        """
+        统计用户收藏的音乐数量
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+
+        Returns:
+            int: 收藏数量
+        """
+        from sqlalchemy import func
+        stmt = (
+            select(func.count(func.distinct(Interaction.music_id)))
+            .where(
+                Interaction.user_id == str(user_id),
+                Interaction.interaction_type == InteractionType.LIKE,
+            )
+        )
+        result = await db.execute(stmt)
+        return result.scalar_one()
+
+    async def remove_user_like(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        music_id: int,
+    ) -> bool:
+        """
+        取消用户对某音乐的收藏
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+            music_id: 音乐 ID
+
+        Returns:
+            bool: 是否成功删除
+        """
+        from sqlalchemy import delete
+        stmt = (
+            delete(Interaction)
+            .where(
+                Interaction.user_id == str(user_id),
+                Interaction.music_id == music_id,
+                Interaction.interaction_type == InteractionType.LIKE,
+            )
+        )
+        result = await db.execute(stmt)
+        await db.commit()
+        return result.rowcount > 0
+
 
 # 单例实例，便于依赖注入
 interaction_repository = InteractionRepository()

@@ -1,5 +1,5 @@
 import request from './axios';
-import type {Artist, Album, Music, MusicListResponse, InteractionCreate, InteractionResponse, LikeStatusResponse} from '@/types/entity';
+import type {Artist, Album, Music, MusicListResponse, InteractionCreate, InteractionResponse, LikeStatusResponse, Playlist, PlaylistDetail, PlaylistListResponse, PlaylistCreateRequest, PlaylistUpdateRequest} from '@/types/entity';
 
 export const musicApi = {
     // 获取艺术家列表
@@ -62,4 +62,78 @@ export const musicApi = {
      */
     checkLikeStatus: (musicId: number) =>
         request.get<any, LikeStatusResponse>(`/music/interactions/like-status/${musicId}`),
+
+    /**
+     * 获取用户收藏的音乐列表
+     *
+     * @param skip 跳过的记录数
+     * @param limit 返回数量限制
+     * @returns 音乐列表
+     */
+    getLikedMusic: (skip = 0, limit = 50) =>
+        request.get<any, MusicListResponse>('/music/interactions/liked', {params: {skip, limit}}),
+
+    /**
+     * 取消用户对某音乐的收藏
+     *
+     * @param musicId 音乐ID
+     */
+    removeLike: (musicId: number) =>
+        request.delete<any, void>(`/music/interactions/like/${musicId}`),
+
+    /**
+     * 搜索音乐
+     * 按歌曲名称或歌手名称进行模糊搜索
+     *
+     * @param q 搜索关键词
+     * @param skip 跳过的记录数
+     * @param limit 返回数量限制
+     * @returns 音乐列表
+     */
+    searchMusic: (q: string, skip = 0, limit = 20) =>
+        request.get<any, MusicListResponse>('/music/search', {params: {q, skip, limit}}),
+
+    // --- Playlist API ---
+
+    /**
+     * 创建歌单
+     */
+    createPlaylist: (data: PlaylistCreateRequest) =>
+        request.post<any, Playlist>('/music/playlists', data),
+
+    /**
+     * 获取用户歌单列表
+     */
+    getUserPlaylists: (skip = 0, limit = 50) =>
+        request.get<any, PlaylistListResponse>('/music/playlists', {params: {skip, limit}}),
+
+    /**
+     * 获取歌单详情
+     */
+    getPlaylistDetail: (id: number) =>
+        request.get<any, PlaylistDetail>(`/music/playlists/${id}`),
+
+    /**
+     * 更新歌单
+     */
+    updatePlaylist: (id: number, data: PlaylistUpdateRequest) =>
+        request.put<any, Playlist>(`/music/playlists/${id}`, data),
+
+    /**
+     * 删除歌单
+     */
+    deletePlaylist: (id: number) =>
+        request.delete<any, void>(`/music/playlists/${id}`),
+
+    /**
+     * 添加歌曲到歌单
+     */
+    addSongToPlaylist: (playlistId: number, musicId: number) =>
+        request.post<any, any>(`/music/playlists/${playlistId}/songs`, {music_id: musicId}),
+
+    /**
+     * 从歌单移除歌曲
+     */
+    removeSongFromPlaylist: (playlistId: number, musicId: number) =>
+        request.delete<any, void>(`/music/playlists/${playlistId}/songs/${musicId}`),
 };

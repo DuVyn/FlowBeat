@@ -5,6 +5,8 @@
 1. Artist (艺术家) - 聚合根之一
 2. Album (专辑) - 属于艺术家
 3. Music (音乐) - 属于专辑
+4. Playlist (歌单) - 用户创建的歌单
+5. PlaylistSong (歌单歌曲关联) - 歌单与歌曲的多对多关联
 
 设计原则:
 1. 完整性约束: 使用外键 (ForeignKey) 强制维护实体间的关联关系。
@@ -17,6 +19,7 @@ from typing import List, Optional
 
 # 引入 DateTime 用于显式指定时区类型
 from sqlalchemy import Date, ForeignKey, Integer, String, Text, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -82,3 +85,68 @@ class Music(Base):
 
     # 关联定义
     album: Mapped["Album"] = relationship(back_populates="musics")
+
+
+class Playlist(Base):
+    """
+    用户歌单实体
+
+    支持用户创建自己的歌单，组织收藏的歌曲。
+    """
+    __tablename__ = "playlists"
+
+    name: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    cover_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # 外键: 歌单属于某个用户
+    user_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False).with_variant(UUID, "postgresql"),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # 时间戳
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_get_utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_get_utc_now, onupdate=_get_utc_now)
+
+    # 关联定义: 歌单包含多首歌曲
+    songs: Mapped[List["PlaylistSong"]] = relationship(
+        back_populates="playlist",
+        cascade="all, delete-orphan",
+        order_by="PlaylistSong.position"
+    )
+
+
+class PlaylistSong(Base):
+    """
+    歌单与歌曲的关联实体
+
+    实现歌单与歌曲的多对多关系，并支持歌曲在歌单中的排序。
+    """
+    __tablename__ = "playlist_songs"
+
+    # 外键: 关联歌单
+    playlist_id: Mapped[int] = mapped_column(
+        ForeignKey("playlists.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # 外键: 关联歌曲
+    music_id: Mapped[int] = mapped_column(
+        ForeignKey("musics.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # 歌曲在歌单中的位置
+    position: Mapped[int] = mapped_column(Integer, default=0)
+
+    # 添加时间
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_get_utc_now)
+
+    # 关联定义
+    playlist: Mapped["Playlist"] = relationship(back_populates="songs")
+    music: Mapped["Music"] = relationship()

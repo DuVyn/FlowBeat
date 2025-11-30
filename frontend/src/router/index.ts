@@ -43,6 +43,16 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('@/views/library/LibraryIndex.vue'),
             },
             {
+                path: 'favorites',
+                name: 'favorites',
+                component: () => import('@/views/library/FavoritesPage.vue'),
+            },
+            {
+                path: 'playlist/:id',
+                name: 'playlist-detail',
+                component: () => import('@/views/library/PlaylistDetail.vue'),
+            },
+            {
                 path: 'profile',
                 name: 'profile',
                 component: UserProfile
