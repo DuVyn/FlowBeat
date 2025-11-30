@@ -2,6 +2,7 @@
 音乐资源管理 API
 
 包含艺术家、专辑的 CRUD 和音乐文件的上传接口。
+同时包含用户交互事件的上报接口。
 """
 
 from typing import Annotated, List
@@ -19,7 +20,8 @@ from app.schemas.music import (
     AlbumCreate, AlbumResponse,
     ArtistCreate, ArtistResponse,
     MusicCreate, MusicResponse,
-    MusicListResponse
+    MusicListResponse,
+    InteractionCreate, InteractionResponse, LikeStatusResponse
 )
 from app.services.music_service import music_service
 
@@ -152,3 +154,52 @@ async def delete_music(
     删除音乐
     """
     await music_service.delete_music(db, music_id)
+
+
+# --- Interaction Endpoints ---
+
+@router.post("/interactions", response_model=InteractionResponse)
+async def record_interaction(
+        *,
+        db: Annotated[AsyncSession, Depends(deps.get_db)],
+        current_user: Annotated[User, Depends(deps.get_current_user)],
+        interaction_in: InteractionCreate,
+):
+    """
+    记录用户交互行为
+
+    前端播放器在以下场景调用此接口:
+    - PLAY: 音乐播放完成时上报
+    - LIKE: 用户点击红心收藏时上报
+    - SKIP: 用户跳过当前音乐时上报
+
+    交互权重计算逻辑:
+    - PLAY: 1.0 (完整播放表示有一定兴趣)
+    - LIKE: 5.0 (主动收藏表示强烈偏好)
+    - SKIP: 0.0 (跳过不参与正向推荐)
+    """
+    return await music_service.record_interaction(
+        db=db,
+        user_id=current_user.id,
+        music_id=interaction_in.music_id,
+        interaction_type_str=interaction_in.interaction_type.value,
+    )
+
+
+@router.get("/interactions/like-status/{music_id}", response_model=LikeStatusResponse)
+async def check_like_status(
+        music_id: int,
+        db: Annotated[AsyncSession, Depends(deps.get_db)],
+        current_user: Annotated[User, Depends(deps.get_current_user)],
+):
+    """
+    检查用户是否已收藏某音乐
+
+    用于前端播放器和音乐卡片展示收藏状态。
+    """
+    liked = await music_service.check_like_status(
+        db=db,
+        user_id=current_user.id,
+        music_id=music_id,
+    )
+    return LikeStatusResponse(liked=liked)

@@ -2,7 +2,11 @@
 import {NLayout, NLayoutSider, NLayoutHeader, NLayoutContent} from 'naive-ui';
 import Sidebar from './Sidebar.vue';
 import Header from './Header.vue';
-// 暂时没有 AudioPlayer，预留插槽
+import AudioPlayer from '@/components/player/AudioPlayer.vue';
+import PlayList from '@/components/player/PlayList.vue';
+import {usePlayerStore} from '@/stores/playerStore';
+
+const playerStore = usePlayerStore();
 </script>
 
 <template>
@@ -11,7 +15,7 @@ import Header from './Header.vue';
       <Header/>
     </n-layout-header>
 
-    <n-layout has-sider position="absolute" style="top: 64px; bottom: 0">
+    <n-layout has-sider position="absolute" style="top: 64px;" :style="{ bottom: playerStore.currentTrack ? '80px' : '0' }">
       <n-layout-sider
           bordered
           width="240"
@@ -29,6 +33,12 @@ import Header from './Header.vue';
         </router-view>
       </n-layout-content>
     </n-layout>
+
+    <!-- 底部播放器 -->
+    <AudioPlayer />
+
+    <!-- 播放列表抽屉 -->
+    <PlayList />
   </n-layout>
 </template>
 
