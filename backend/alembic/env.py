@@ -47,7 +47,9 @@ sys.path.append(str(base_path))
 # 导入项目配置和模型基类
 # 必须在路径注入之后导入
 from app.core.config import settings
-from app.models.base import Base
+# 从 app.models 包导入以触发所有模型的加载
+# 这确保 Alembic 能发现所有在 app/models/__init__.py 中导出的模型
+from app.models import Base
 
 # =============================================================================
 # Alembic 配置初始化
