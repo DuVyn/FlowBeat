@@ -107,7 +107,7 @@ export const usePlayerStore = defineStore('player', () => {
         playlist.value = [...tracks];
         if (tracks.length > 0 && startIndex >= 0 && startIndex < tracks.length) {
             currentIndex.value = startIndex;
-            currentTrack.value = tracks[startIndex];
+            currentTrack.value = tracks[startIndex] ?? null;
         } else {
             currentIndex.value = -1;
             currentTrack.value = null;
@@ -233,7 +233,7 @@ export const usePlayerStore = defineStore('player', () => {
         }
 
         currentIndex.value = nextIndex;
-        currentTrack.value = playlist.value[nextIndex];
+        currentTrack.value = playlist.value[nextIndex] ?? null;
         return currentTrack.value;
     };
 
@@ -275,7 +275,7 @@ export const usePlayerStore = defineStore('player', () => {
         }
 
         currentIndex.value = prevIndex;
-        currentTrack.value = playlist.value[prevIndex];
+        currentTrack.value = playlist.value[prevIndex] ?? null;
         return currentTrack.value;
     };
 
@@ -283,10 +283,10 @@ export const usePlayerStore = defineStore('player', () => {
      * 切换播放模式
      */
     const togglePlayMode = () => {
-        const modes = [PlayMode.SEQUENTIAL, PlayMode.REPEAT_ONE, PlayMode.SHUFFLE];
+        const modes: PlayMode[] = [PlayMode.SEQUENTIAL, PlayMode.REPEAT_ONE, PlayMode.SHUFFLE];
         const currentModeIndex = modes.indexOf(playMode.value);
         const nextModeIndex = (currentModeIndex + 1) % modes.length;
-        playMode.value = modes[nextModeIndex];
+        playMode.value = modes[nextModeIndex] ?? PlayMode.SEQUENTIAL;
     };
 
     /**
@@ -312,7 +312,7 @@ export const usePlayerStore = defineStore('player', () => {
     const jumpTo = (index: number) => {
         if (index >= 0 && index < playlist.value.length) {
             currentIndex.value = index;
-            currentTrack.value = playlist.value[index];
+            currentTrack.value = playlist.value[index] ?? null;
         }
     };
 

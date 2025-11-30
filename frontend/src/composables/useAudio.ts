@@ -13,7 +13,7 @@
  * 3. 资源管理: 提供清理函数，防止内存泄漏
  */
 
-import {ref, onUnmounted, watch} from 'vue';
+import {ref, onUnmounted, watch, type Ref} from 'vue';
 
 /**
  * 音频事件回调配置
@@ -29,12 +29,12 @@ export interface AudioCallbacks {
  */
 export interface UseAudioReturn {
     // 状态
-    isPlaying: ReturnType<typeof ref<boolean>>;
-    currentTime: ReturnType<typeof ref<number>>;
-    duration: ReturnType<typeof ref<number>>;
-    volume: ReturnType<typeof ref<number>>;
-    buffered: ReturnType<typeof ref<number>>;
-    isLoading: ReturnType<typeof ref<boolean>>;
+    isPlaying: Ref<boolean>;
+    currentTime: Ref<number>;
+    duration: Ref<number>;
+    volume: Ref<number>;
+    buffered: Ref<number>;
+    isLoading: Ref<boolean>;
 
     // 方法
     play: () => Promise<void>;
