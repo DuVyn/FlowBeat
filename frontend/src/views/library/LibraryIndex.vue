@@ -19,14 +19,16 @@ import {
   NPopconfirm,
   type DataTableColumns
 } from 'naive-ui';
-import {CloudUploadOutline as UploadIcon, Refresh as RefreshIcon} from '@vicons/ionicons5';
+import {CloudUploadOutline as UploadIcon, Refresh as RefreshIcon, Play as PlayIcon} from '@vicons/ionicons5';
 import {musicApi} from '@/api/music';
 import {useUserStore} from '@/stores/userStore';
+import {usePlayerStore} from '@/stores/playerStore';
 import type {Music} from '@/types/entity';
 import UploadModal from './UploadModal.vue';
 
 // --- State ---
 const userStore = useUserStore();
+const playerStore = usePlayerStore();
 const message = useMessage();
 
 const loading = ref(false);
@@ -72,6 +74,11 @@ const handleDelete = async (id: number) => {
   } catch (error) {
     // 错误已由拦截器处理
   }
+};
+
+// 播放处理函数
+const handlePlay = (track: Music) => {
+  playerStore.playTrack(track);
 };
 
 const columns: DataTableColumns<Music> = [
@@ -134,21 +141,40 @@ const columns: DataTableColumns<Music> = [
   {
     title: '操作',
     key: 'actions',
-    width: 100,
+    width: 150,
     render(row) {
-      // 权限控制：仅管理员显示删除按钮
-      if (!userStore.isAdmin) return null;
+      const buttons = [];
 
-      return h(
-          NPopconfirm,
-          {
-            onPositiveClick: () => handleDelete(row.id)
-          },
-          {
-            trigger: () => h(NButton, {size: 'small', type: 'error', quaternary: true}, {default: () => '删除'}),
-            default: () => '确定要删除这首歌吗？物理文件也将被清除。'
-          }
+      // 播放按钮 - 所有用户可见
+      buttons.push(
+          h(NButton, {
+            size: 'small',
+            type: 'primary',
+            quaternary: true,
+            onClick: () => handlePlay(row)
+          }, {
+            icon: () => h(NIcon, null, {default: () => h(PlayIcon)}),
+            default: () => '播放'
+          })
       );
+
+      // 权限控制：仅管理员显示删除按钮
+      if (userStore.isAdmin) {
+        buttons.push(
+            h(
+                NPopconfirm,
+                {
+                  onPositiveClick: () => handleDelete(row.id)
+                },
+                {
+                  trigger: () => h(NButton, {size: 'small', type: 'error', quaternary: true}, {default: () => '删除'}),
+                  default: () => '确定要删除这首歌吗？物理文件也将被清除。'
+                }
+            )
+        );
+      }
+
+      return h(NSpace, null, {default: () => buttons});
     }
   }
 

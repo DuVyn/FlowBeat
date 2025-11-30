@@ -278,10 +278,9 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
 
 <template>
     <div class="audio-player">
-        <!-- 有歌曲时显示完整播放器 -->
-        <template v-if="playerStore.currentTrack">
-            <!-- 左侧: 音乐信息 -->
-            <div class="player-info">
+        <!-- 左侧: 音乐信息 -->
+        <div class="player-info">
+            <template v-if="playerStore.currentTrack">
                 <img
                     :src="coverUrl"
                     alt="封面"
@@ -292,116 +291,118 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
                     <div class="track-artist">{{ artistName }}</div>
                 </div>
                 <LikeButton
-                    v-if="playerStore.currentTrack"
                     :music-id="playerStore.currentTrack.id"
                 />
-            </div>
-
-            <!-- 中间: 播放控制 -->
-            <div class="player-controls">
-                <div class="control-buttons">
-                    <n-tooltip trigger="hover">
-                        <template #trigger>
-                            <button
-                                class="control-btn"
-                                :disabled="!playerStore.hasPrevious"
-                                @click="handlePrevious"
-                            >
-                                <n-icon :size="20"><PlaySkipBack /></n-icon>
-                            </button>
-                        </template>
-                        上一曲
-                    </n-tooltip>
-
-                    <button
-                        class="control-btn play-btn"
-                        @click="handleTogglePlay"
-                    >
-                        <n-spin v-if="isLoading" :size="20" />
-                        <n-icon v-else :size="28">
-                            <Pause v-if="isPlaying" />
-                            <Play v-else />
-                        </n-icon>
-                    </button>
-
-                    <n-tooltip trigger="hover">
-                        <template #trigger>
-                            <button
-                                class="control-btn"
-                                :disabled="!playerStore.hasNext"
-                                @click="handleNext"
-                            >
-                                <n-icon :size="20"><PlaySkipForward /></n-icon>
-                            </button>
-                        </template>
-                        下一曲
-                    </n-tooltip>
+            </template>
+            <template v-else>
+                <div class="cover-placeholder">
+                    <n-icon :size="24"><MusicalNotes /></n-icon>
                 </div>
-
-                <!-- 进度条 -->
-                <div class="progress-bar">
-                    <span class="time-label">{{ currentTimeFormatted }}</span>
-                    <n-slider
-                        :value="progressPercent"
-                        :step="0.1"
-                        :tooltip="false"
-                        @update:value="handleProgressChange"
-                    />
-                    <span class="time-label">{{ durationFormatted }}</span>
+                <div class="track-info">
+                    <div class="track-title placeholder-text">未选择歌曲</div>
+                    <div class="track-artist placeholder-text">--</div>
                 </div>
-            </div>
+            </template>
+        </div>
 
-            <!-- 右侧: 附加控制 -->
-            <div class="player-extra">
+        <!-- 中间: 播放控制 -->
+        <div class="player-controls">
+            <div class="control-buttons">
                 <n-tooltip trigger="hover">
                     <template #trigger>
                         <button
                             class="control-btn"
-                            :class="{ 'mode-active': playerStore.playMode !== PlayMode.SEQUENTIAL }"
-                            @click="playerStore.togglePlayMode"
+                            :disabled="!playerStore.currentTrack || !playerStore.hasPrevious"
+                            @click="handlePrevious"
                         >
-                            <n-icon :size="18">
-                                <component :is="playModeIcon" />
-                            </n-icon>
+                            <n-icon :size="20"><PlaySkipBack /></n-icon>
                         </button>
                     </template>
-                    {{ playModeTooltip }}
+                    上一曲
                 </n-tooltip>
 
-                <div class="volume-control">
-                    <button class="control-btn" @click="toggleMute">
-                        <n-icon :size="18">
-                            <VolumeMute v-if="isMuted" />
-                            <VolumeHigh v-else />
-                        </n-icon>
-                    </button>
-                    <n-slider
-                        :value="volume * 100"
-                        :step="1"
-                        :tooltip="false"
-                        style="width: 80px"
-                        @update:value="handleVolumeChange"
-                    />
-                </div>
+                <button
+                    class="control-btn play-btn"
+                    :disabled="!playerStore.currentTrack"
+                    @click="handleTogglePlay"
+                >
+                    <n-spin v-if="isLoading" :size="20" />
+                    <n-icon v-else :size="28">
+                        <Pause v-if="isPlaying" />
+                        <Play v-else />
+                    </n-icon>
+                </button>
 
                 <n-tooltip trigger="hover">
                     <template #trigger>
-                        <button class="control-btn" @click="playerStore.togglePlaylistVisible">
-                            <n-icon :size="18"><List /></n-icon>
+                        <button
+                            class="control-btn"
+                            :disabled="!playerStore.currentTrack || !playerStore.hasNext"
+                            @click="handleNext"
+                        >
+                            <n-icon :size="20"><PlaySkipForward /></n-icon>
                         </button>
                     </template>
-                    播放列表
+                    下一曲
                 </n-tooltip>
             </div>
-        </template>
 
-        <!-- 无歌曲时显示占位状态 -->
-        <template v-else>
-            <div class="player-placeholder">
-                <n-icon :size="24" class="placeholder-icon"><MusicalNotes /></n-icon>
-                <span class="placeholder-text">选择一首歌曲开始播放</span>
+            <!-- 进度条 -->
+            <div class="progress-bar">
+                <span class="time-label">{{ currentTimeFormatted }}</span>
+                <n-slider
+                    :value="progressPercent"
+                    :step="0.1"
+                    :tooltip="false"
+                    :disabled="!playerStore.currentTrack"
+                    @update:value="handleProgressChange"
+                />
+                <span class="time-label">{{ durationFormatted }}</span>
             </div>
-        </template>
+        </div>
+
+        <!-- 右侧: 附加控制 -->
+        <div class="player-extra">
+            <n-tooltip trigger="hover">
+                <template #trigger>
+                    <button
+                        class="control-btn"
+                        :class="{ 'mode-active': playerStore.playMode !== PlayMode.SEQUENTIAL }"
+                        @click="playerStore.togglePlayMode"
+                    >
+                        <n-icon :size="18">
+                            <component :is="playModeIcon" />
+                        </n-icon>
+                    </button>
+                </template>
+                {{ playModeTooltip }}
+            </n-tooltip>
+
+            <div class="volume-control">
+                <button class="control-btn" @click="toggleMute">
+                    <n-icon :size="18">
+                        <VolumeMute v-if="isMuted" />
+                        <VolumeHigh v-else />
+                    </n-icon>
+                </button>
+                <n-slider
+                    :value="volume * 100"
+                    :step="1"
+                    :tooltip="false"
+                    style="width: 80px"
+                    @update:value="handleVolumeChange"
+                />
+            </div>
+
+            <n-tooltip trigger="hover">
+                <template #trigger>
+                    <button class="control-btn" @click="playerStore.togglePlaylistVisible">
+                        <n-icon :size="18"><List /></n-icon>
+                    </button>
+                </template>
+                播放列表
+            </n-tooltip>
+        </div>
     </div>
 </template>
 
@@ -435,6 +436,17 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
     height: 56px;
     border-radius: 4px;
     object-fit: cover;
+}
+
+.cover-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+    background: var(--n-color-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--n-text-color-3);
 }
 
 .track-info {
@@ -511,6 +523,16 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
     background: var(--n-primary-color-hover);
 }
 
+.play-btn:disabled {
+    background: var(--n-color-hover);
+    color: var(--n-text-color-3);
+    cursor: not-allowed;
+}
+
+.play-btn:disabled:hover {
+    background: var(--n-color-hover);
+}
+
 .progress-bar {
     display: flex;
     align-items: center;
@@ -542,20 +564,8 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
 }
 
 /* 占位状态 */
-.player-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: 100%;
-    color: var(--n-text-color-3);
-}
-
-.placeholder-icon {
-    opacity: 0.6;
-}
-
 .placeholder-text {
     font-size: 14px;
+    color: var(--n-text-color-3);
 }
 </style>
