@@ -76,3 +76,9 @@ class MusicResponse(MusicBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MusicListResponse(BaseModel):
+    """分页音乐列表响应"""
+    items: List[MusicResponse]
+    total: int

@@ -1,5 +1,5 @@
 import request from './axios';
-import type {Artist, Album, Music} from '@/types/entity';
+import type {Artist, Album, Music, MusicListResponse} from '@/types/entity';
 
 export const musicApi = {
     // 获取艺术家列表
@@ -37,7 +37,7 @@ export const musicApi = {
 
     // 获取音乐列表
     getMusicList: (skip = 0, limit = 50) =>
-        request.get<any, Music[]>('/music/', {params: {skip, limit}}),
+        request.get<any, MusicListResponse>('/music/', {params: {skip, limit}}),
 
     // 删除音乐
     deleteMusic: (id: number) =>
