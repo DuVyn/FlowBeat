@@ -171,6 +171,14 @@ class PlaylistResponse(PlaylistBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator('user_id', mode='before')
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        """将 UUID 对象转换为字符串，解决数据库返回 UUID 类型导致的验证错误"""
+        if v is not None and not isinstance(v, str):
+            return str(v)
+        return v
+
 
 class PlaylistDetailResponse(PlaylistResponse):
     """歌单详情响应（包含歌曲列表）"""
