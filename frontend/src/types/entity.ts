@@ -46,4 +46,14 @@ export interface Music {
     file_url: string;
     album_id: number;
     album?: Album;   // 嵌套对象
+    created_at: string; // ISO 日期时间字符串
+}
+
+/**
+ * 分页音乐列表响应
+ * 对应后端 app.schemas.music.MusicListResponse
+ */
+export interface MusicListResponse {
+    items: Music[];
+    total: number;
 }

@@ -115,12 +115,18 @@ const columns: DataTableColumns<Music> = [
   },
   {
     title: '创建时间',
-    key: 'created_at', // 假设后端后续会返回
+    key: 'created_at',
     width: 180,
-    render(_) {
-      // 若后端模型中没有 exposed created_at，这里可能需要调整
-      // 目前 types/entity.ts 中未定义 created_at，暂不渲染或预留
-      return '-';
+    render(row) {
+      if (!row.created_at) return '-';
+      const date = new Date(row.created_at);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
   },
 
@@ -160,14 +166,10 @@ const loadData = async () => {
     const skip = (pagination.page - 1) * pagination.pageSize;
     const limit = pagination.pageSize;
 
-    // 注意：当前 musicApi.getMusicList 返回的是 Music[] 数组，
-    // 如果后端支持总数返回 (e.g. { items: [], total: 100 })，分页体验会更好。
-    // 目前基于提供的后端代码，只能获取列表。
+    // 后端返回 { items: [], total: number } 格式
     const data = await musicApi.getMusicList(skip, limit);
-    musicList.value = data;
-
-    // 临时处理：如果返回的数据量少于 limit，说明到底了，或者后端暂未提供 count 接口
-    // 实际生产环境建议后端增加 /music/count 接口或在 list 接口返回总数
+    musicList.value = data.items;
+    pagination.itemCount = data.total;
   } catch (error) {
     message.error('获取音乐列表失败');
   } finally {

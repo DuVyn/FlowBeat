@@ -7,7 +7,7 @@
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -18,7 +18,8 @@ from app.repositories.music_repository import AlbumRepository, ArtistRepository,
 from app.schemas.music import (
     AlbumCreate, AlbumResponse,
     ArtistCreate, ArtistResponse,
-    MusicCreate, MusicResponse
+    MusicCreate, MusicResponse,
+    MusicListResponse
 )
 from app.services.music_service import music_service
 
@@ -116,20 +117,27 @@ async def upload_music(
     return result.scalar_one()
 
 
-@router.get("/", response_model=List[MusicResponse])
+@router.get("/", response_model=MusicListResponse)
 async def read_musics(
         db: Annotated[AsyncSession, Depends(deps.get_db)],
         skip: int = 0,
         limit: int = 100,
 ):
     """获取音乐列表 (分页)"""
+    # 获取总数
+    count_stmt = select(func.count()).select_from(Music)
+    count_result = await db.execute(count_stmt)
+    total = count_result.scalar_one()
+
     # 列表查询也需要预加载，否则序列化时会报错
     # 这里的 repo.get_multi 默认没有预加载，我们需要重写一下查询
     stmt = select(Music).options(
         selectinload(Music.album).selectinload(Album.artist)
     ).offset(skip).limit(limit)
     result = await db.execute(stmt)
-    return list(result.scalars().all())
+    items = list(result.scalars().all())
+
+    return MusicListResponse(items=items, total=total)
 
 
 # DELETE 接口
