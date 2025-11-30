@@ -14,19 +14,8 @@
  * 3. 可访问性: 支持键盘操作
  */
 
-import {computed} from 'vue';
-import {
-    NDrawer,
-    NDrawerContent,
-    NList,
-    NListItem,
-    NIcon,
-    NButton,
-    NEmpty,
-    NSpace,
-    NText,
-} from 'naive-ui';
-import {Trash, X, PlayerPlay} from '@vicons/tabler';
+import {NDrawer, NDrawerContent, NList, NListItem, NIcon, NButton, NEmpty, NSpace, NText} from 'naive-ui';
+import {Trash, Close, Play} from '@vicons/ionicons5';
 
 import {usePlayerStore} from '@/stores/playerStore';
 import type {Music} from '@/types/entity';
@@ -137,7 +126,7 @@ const getArtistName = (track: Music): string => {
                                 :size="16"
                                 color="var(--n-primary-color)"
                             >
-                                <PlayerPlay />
+                                <Play />
                             </n-icon>
                             <span v-else class="index-number">{{ index + 1 }}</span>
                         </div>
@@ -161,7 +150,7 @@ const getArtistName = (track: Music): string => {
                             @click="(e: Event) => handleRemoveTrack(track.id, e)"
                         >
                             <template #icon>
-                                <n-icon><X /></n-icon>
+                                <n-icon><Close /></n-icon>
                             </template>
                         </n-button>
                     </template>

@@ -16,26 +16,24 @@
  * - 跳过音乐时上报 SKIP 事件
  */
 
-import {watch, computed, onMounted} from 'vue';
+import {watch, computed} from 'vue';
 import {
     NSlider,
     NIcon,
-    NSpace,
     NTooltip,
     NSpin,
 } from 'naive-ui';
 import {
     Play,
     Pause,
-    SkipBack,
-    SkipForward,
-    Volume2,
-    VolumeX,
-    ListMusic,
+    PlaySkipBack,
+    PlaySkipForward,
+    VolumeHigh,
+    VolumeMute,
+    List,
     Repeat,
-    Repeat1,
     Shuffle,
-} from '@vicons/tabler';
+} from '@vicons/ionicons5';
 
 import {useAudio} from '@/composables/useAudio';
 import {usePlayerStore, PlayMode} from '@/stores/playerStore';
@@ -58,7 +56,6 @@ const {
     isLoading,
     play,
     pause,
-    togglePlay,
     seek,
     setVolume,
     loadTrack,
@@ -105,7 +102,7 @@ const progressPercent = computed(() => {
 const playModeIcon = computed(() => {
     switch (playerStore.playMode) {
         case PlayMode.REPEAT_ONE:
-            return Repeat1;
+            return Repeat; // 使用同一个图标，通过样式区分
         case PlayMode.SHUFFLE:
             return Shuffle;
         default:
@@ -310,7 +307,7 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
                             :disabled="!playerStore.hasPrevious"
                             @click="handlePrevious"
                         >
-                            <n-icon :size="20"><SkipBack /></n-icon>
+                            <n-icon :size="20"><PlaySkipBack /></n-icon>
                         </button>
                     </template>
                     上一曲
@@ -334,7 +331,7 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
                             :disabled="!playerStore.hasNext"
                             @click="handleNext"
                         >
-                            <n-icon :size="20"><SkipForward /></n-icon>
+                            <n-icon :size="20"><PlaySkipForward /></n-icon>
                         </button>
                     </template>
                     下一曲
@@ -358,7 +355,11 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
         <div class="player-extra">
             <n-tooltip trigger="hover">
                 <template #trigger>
-                    <button class="control-btn" @click="playerStore.togglePlayMode">
+                    <button
+                        class="control-btn"
+                        :class="{ 'mode-active': playerStore.playMode !== PlayMode.SEQUENTIAL }"
+                        @click="playerStore.togglePlayMode"
+                    >
                         <n-icon :size="18">
                             <component :is="playModeIcon" />
                         </n-icon>
@@ -370,8 +371,8 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
             <div class="volume-control">
                 <button class="control-btn" @click="toggleMute">
                     <n-icon :size="18">
-                        <VolumeX v-if="isMuted" />
-                        <Volume2 v-else />
+                        <VolumeMute v-if="isMuted" />
+                        <VolumeHigh v-else />
                     </n-icon>
                 </button>
                 <n-slider
@@ -386,7 +387,7 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
             <n-tooltip trigger="hover">
                 <template #trigger>
                     <button class="control-btn" @click="playerStore.togglePlaylistVisible">
-                        <n-icon :size="18"><ListMusic /></n-icon>
+                        <n-icon :size="18"><List /></n-icon>
                     </button>
                 </template>
                 播放列表
@@ -484,6 +485,10 @@ watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
 .control-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.control-btn.mode-active {
+    color: var(--n-primary-color);
 }
 
 .play-btn {

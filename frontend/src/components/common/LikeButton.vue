@@ -15,7 +15,7 @@
 
 import {ref, onMounted, watch} from 'vue';
 import {NIcon, NButton} from 'naive-ui';
-import {Heart, HeartFilled} from '@vicons/tabler';
+import {Heart, HeartOutline} from '@vicons/ionicons5';
 
 import {musicApi} from '@/api/music';
 import {InteractionType} from '@/types/entity';
@@ -111,8 +111,8 @@ watch(() => props.musicId, () => {
     >
         <template #icon>
             <n-icon :size="18" :color="isLiked ? '#e74c3c' : undefined">
-                <HeartFilled v-if="isLiked" />
-                <Heart v-else />
+                <Heart v-if="isLiked" />
+                <HeartOutline v-else />
             </n-icon>
         </template>
     </n-button>
