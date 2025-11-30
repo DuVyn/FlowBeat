@@ -35,15 +35,12 @@ const routes: RouteRecordRaw[] = [
                 path: 'discovery',
                 name: 'discovery',
                 // 懒加载组件，优化首屏性能
-                component: () => import('@/views/discovery/Discovery.vue').catch(() => {
-                    // 临时占位，防止未创建文件时报错
-                    return import({template: '<div>Discovery Page (Coming Soon)</div>'} as any)
-                }),
+                component: () => import('@/views/discovery/Discovery.vue'),
             },
             {
                 path: 'library',
                 name: 'library',
-                component: () => import('@/views/library/LibraryIndex.vue').catch(() => ({template: '<div>Library Page (Coming Soon)</div>'} as any)),
+                component: () => import('@/views/library/LibraryIndex.vue'),
             },
             {
                 path: 'profile',
