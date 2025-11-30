@@ -57,3 +57,43 @@ export interface MusicListResponse {
     items: Music[];
     total: number;
 }
+
+/**
+ * 交互类型枚举
+ * 对应后端 app.models.interaction.InteractionType
+ */
+export enum InteractionType {
+    PLAY = 'PLAY',
+    LIKE = 'LIKE',
+    SKIP = 'SKIP',
+}
+
+/**
+ * 交互记录创建请求
+ * 对应后端 app.schemas.music.InteractionCreate
+ */
+export interface InteractionCreate {
+    music_id: number;
+    interaction_type: InteractionType;
+}
+
+/**
+ * 交互记录响应
+ * 对应后端 app.schemas.music.InteractionResponse
+ */
+export interface InteractionResponse {
+    id: number;
+    user_id: string;
+    music_id: number;
+    interaction_type: InteractionType;
+    weight: number;
+    created_at: string;
+}
+
+/**
+ * 收藏状态响应
+ * 对应后端 app.schemas.music.LikeStatusResponse
+ */
+export interface LikeStatusResponse {
+    liked: boolean;
+}

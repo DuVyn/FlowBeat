@@ -2,16 +2,20 @@
 音乐资源管理服务
 
 本模块处理复杂的音乐上传与管理逻辑，核心是保证 MinIO 文件与 DB 元数据的一致性。
+同时处理用户交互行为的记录与权重计算。
 """
 
 import uuid
 from typing import BinaryIO
+from uuid import UUID
 
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BusinessError, NotFoundError
+from app.models.interaction import Interaction, InteractionType, INTERACTION_WEIGHTS
 from app.models.music import Music
+from app.repositories.interaction_repository import interaction_repository
 from app.repositories.music_repository import MusicRepository
 from app.schemas.music import MusicCreate
 from app.services.minio_client import minio_client
@@ -123,6 +127,75 @@ class MusicService:
             except Exception as e:
                 # 记录日志即可，不要阻断主流程，因为业务上该资源已不存在
                 print(f"Warning: Failed to cleanup file {file_url}: {e}")
+
+    async def record_interaction(
+            self,
+            db: AsyncSession,
+            user_id: UUID,
+            music_id: int,
+            interaction_type_str: str,
+    ) -> Interaction:
+        """
+        记录用户交互行为
+
+        处理交互权重计算逻辑:
+        1. 将前端传入的交互类型字符串转换为枚举
+        2. 根据交互类型查找对应的算法权重
+        3. 调用仓储层持久化交互记录
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+            music_id: 音乐 ID
+            interaction_type_str: 交互类型字符串 (PLAY/LIKE/SKIP)
+
+        Returns:
+            Interaction: 创建的交互记录
+
+        Raises:
+            BusinessError: 当交互类型无效时
+        """
+        # 验证交互类型合法性
+        try:
+            interaction_type = InteractionType(interaction_type_str)
+        except ValueError:
+            raise BusinessError(f"无效的交互类型: {interaction_type_str}")
+
+        # 验证音乐是否存在
+        music = await self.music_repo.get(db, music_id)
+        if not music:
+            raise NotFoundError("音乐文件")
+
+        # 调用仓储层记录交互
+        return await interaction_repository.record_interaction(
+            db=db,
+            user_id=user_id,
+            music_id=music_id,
+            interaction_type=interaction_type,
+        )
+
+    async def check_like_status(
+            self,
+            db: AsyncSession,
+            user_id: UUID,
+            music_id: int,
+    ) -> bool:
+        """
+        检查用户是否已收藏某音乐
+
+        Args:
+            db: 数据库会话
+            user_id: 用户 UUID
+            music_id: 音乐 ID
+
+        Returns:
+            bool: 是否已收藏
+        """
+        return await interaction_repository.check_user_liked_music(
+            db=db,
+            user_id=user_id,
+            music_id=music_id,
+        )
 
 
 music_service = MusicService()

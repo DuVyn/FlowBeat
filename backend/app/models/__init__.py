@@ -12,5 +12,6 @@
 from app.models.base import Base
 from app.models.user import User
 from app.models.music import Album, Artist, Music
+from app.models.interaction import Interaction, InteractionType, INTERACTION_WEIGHTS
 
-__all__ = ["Base", "User", "Artist", "Album", "Music"]
+__all__ = ["Base", "User", "Artist", "Album", "Music", "Interaction", "InteractionType", "INTERACTION_WEIGHTS"]

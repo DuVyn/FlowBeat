@@ -7,6 +7,7 @@
 """
 
 from datetime import date, datetime
+from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -82,3 +83,51 @@ class MusicListResponse(BaseModel):
     """分页音乐列表响应"""
     items: List[MusicResponse]
     total: int
+
+
+# --- Interaction Schemas ---
+class InteractionTypeEnum(str, Enum):
+    """
+    交互类型枚举 (Pydantic Schema 版本)
+
+    用于 API 请求/响应的数据验证。
+    与 app.models.interaction.InteractionType 保持一致。
+    """
+    PLAY = "PLAY"
+    LIKE = "LIKE"
+    SKIP = "SKIP"
+
+
+class InteractionCreate(BaseModel):
+    """
+    交互记录创建请求
+
+    用于前端上报用户行为事件。
+    """
+    music_id: int = Field(..., description="音乐ID")
+    interaction_type: InteractionTypeEnum = Field(..., description="交互类型")
+
+
+class InteractionResponse(BaseModel):
+    """
+    交互记录响应
+
+    用于返回创建的交互记录信息。
+    """
+    id: int
+    user_id: str
+    music_id: int
+    interaction_type: InteractionTypeEnum
+    weight: float
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LikeStatusResponse(BaseModel):
+    """
+    收藏状态响应
+
+    用于前端查询用户是否已收藏某音乐。
+    """
+    liked: bool
