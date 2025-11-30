@@ -38,4 +38,8 @@ export const musicApi = {
     // 获取音乐列表
     getMusicList: (skip = 0, limit = 50) =>
         request.get<any, Music[]>('/music/', {params: {skip, limit}}),
+
+    // 删除音乐
+    deleteMusic: (id: number) =>
+        request.delete<any, void>(`/music/${id}`),
 };

@@ -10,7 +10,7 @@ from typing import BinaryIO
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import BusinessError
+from app.core.exceptions import BusinessError, NotFoundError
 from app.models.music import Music
 from app.repositories.music_repository import MusicRepository
 from app.schemas.music import MusicCreate
@@ -97,6 +97,32 @@ class MusicService:
 
             # 重新抛出异常，触发 FastAPI 的 HTTP 错误响应
             raise BusinessError(f"音乐上传失败: {str(e)}")
+
+    async def delete_music(self, db: AsyncSession, music_id: int) -> None:
+        """
+        删除音乐 (包含文件清理)
+        策略: 先删除 DB 记录，成功后再删除 MinIO 文件。
+        这样即使 MinIO 删除失败，也只是产生孤儿文件，而不会导致用户看到无法播放的死链。
+        """
+
+        # 1. 获取实体以拿到 file_url
+        music = await self.music_repo.get(db, music_id)
+        if not music:
+            raise NotFoundError("音乐文件")
+
+        file_url = music.file_url
+
+        # 2. 删除数据库记录 (这是一个事务操作)
+        await self.music_repo.remove(db, id=music_id)
+
+        # 3. 数据库删除成功后，清理 MinIO 对象
+        # 注意：如果此处失败，会产生孤儿文件，建议生产环境接入异步任务队列重试清理
+        if file_url:
+            try:
+                minio_client.remove_object(file_url)
+            except Exception as e:
+                # 记录日志即可，不要阻断主流程，因为业务上该资源已不存在
+                print(f"Warning: Failed to cleanup file {file_url}: {e}")
 
 
 music_service = MusicService()

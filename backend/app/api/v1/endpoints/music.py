@@ -130,3 +130,17 @@ async def read_musics(
     ).offset(skip).limit(limit)
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
+
+# DELETE 接口
+@router.delete("/{music_id}", status_code=204)
+async def delete_music(
+        music_id: int,
+        db: Annotated[AsyncSession, Depends(deps.get_db)],
+        # 权限校验: 仅管理员可删除
+        current_user: Annotated[User, Depends(deps.get_current_active_superuser)],
+):
+    """
+    删除音乐
+    """
+    await music_service.delete_music(db, music_id)
