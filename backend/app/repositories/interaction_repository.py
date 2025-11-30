@@ -10,7 +10,7 @@
 2. 批量读取: 推荐算法需要批量读取数据，需优化查询效率
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -20,7 +20,7 @@ from app.models.interaction import Interaction, InteractionType, INTERACTION_WEI
 from app.repositories.base import BaseRepository
 
 
-class InteractionRepository(BaseRepository[Interaction]):
+class InteractionRepository(BaseRepository[Interaction, Any, Any]):
     """
     交互数据仓储
 
