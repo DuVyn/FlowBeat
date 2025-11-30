@@ -271,7 +271,11 @@ watch(isPlaying, (playing) => {
 watch(() => playerStore.currentTrack, async (newTrack, oldTrack) => {
     if (newTrack && newTrack.id !== oldTrack?.id) {
         loadTrack(newTrack.file_url);
-        await play();
+        // 只有在用户主动切歌时才自动播放，页面初始化/账号切换不自动播放
+        if (playerStore.shouldAutoPlay) {
+            await play();
+            playerStore.shouldAutoPlay = false; // 重置标志
+        }
     }
 }, {immediate: true});
 </script>

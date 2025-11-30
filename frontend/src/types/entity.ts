@@ -97,3 +97,51 @@ export interface InteractionResponse {
 export interface LikeStatusResponse {
     liked: boolean;
 }
+
+/**
+ * 歌单实体接口
+ * 对应后端 app.schemas.music.PlaylistResponse
+ */
+export interface Playlist {
+    id: number;
+    name: string;
+    description?: string;
+    user_id: string;
+    cover_url?: string;
+    song_count: number;
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * 歌单详情响应（包含歌曲列表）
+ * 对应后端 app.schemas.music.PlaylistDetailResponse
+ */
+export interface PlaylistDetail extends Playlist {
+    songs: Music[];
+}
+
+/**
+ * 歌单列表响应
+ * 对应后端 app.schemas.music.PlaylistListResponse
+ */
+export interface PlaylistListResponse {
+    items: Playlist[];
+    total: number;
+}
+
+/**
+ * 创建歌单请求
+ */
+export interface PlaylistCreateRequest {
+    name: string;
+    description?: string;
+}
+
+/**
+ * 更新歌单请求
+ */
+export interface PlaylistUpdateRequest {
+    name?: string;
+    description?: string;
+}

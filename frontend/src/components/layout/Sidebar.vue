@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import {h, ref, watch, type Component} from 'vue';
-import {NMenu, NIcon, type MenuOption} from 'naive-ui';
-import {RouterLink, useRoute} from 'vue-router';
+import {h, ref, watch, onMounted, type Component} from 'vue';
+import {NMenu, NIcon, NDivider, NButton, NModal, NInput, NForm, NFormItem, useMessage, type MenuOption} from 'naive-ui';
+import {RouterLink, useRoute, useRouter} from 'vue-router';
+import {usePlaylistStore} from '@/stores/playlistStore';
 
-// 移除未使用的 'MusicalNotes as MusicIcon' 导入，解决 TS6133 报错
-// 保持代码整洁，利于 Tree Shaking 减少打包体积
 import {
-  Person as UserIcon,
   Library as LibraryIcon,
-  Compass as DiscoveryIcon
+  Compass as DiscoveryIcon,
+  Heart as HeartIcon,
+  List as PlaylistIcon,
+  Add as AddIcon
 } from '@vicons/ionicons5';
 
 /**
@@ -26,26 +27,28 @@ function renderIcon(icon: Component) {
 
 // 路由实例
 const route = useRoute();
+const router = useRouter();
+const playlistStore = usePlaylistStore();
+const message = useMessage();
 
 /**
  * 菜单状态管理
- * * @design
- * 使用 ref 存储当前高亮的 key。
- * 初始值设为 null，由下方的 watch 立即执行来填充，
- * 避免 setup 执行时路由尚未完全就绪可能导致的 hydration 不匹配问题。
  */
 const activeKey = ref<string | null>(null);
 
+// 新建歌单弹窗
+const showCreateModal = ref(false);
+const newPlaylistName = ref('');
+const newPlaylistDesc = ref('');
+const isCreating = ref(false);
+
 /**
  * 菜单配置项
- * * @design
- * 1. Label 使用 RouterLink 包裹：实现 SPA 无刷新跳转，避免整页重载。
- * 2. Key 与 Route Name 保持一致：建立路由与菜单的隐式映射关系。
  */
 const menuOptions: MenuOption[] = [
   {
     label: () => h(RouterLink, {to: '/discovery'}, {default: () => '发现'}),
-    key: 'discovery', // 对应路由名称
+    key: 'discovery',
     icon: renderIcon(DiscoveryIcon),
   },
   {
@@ -54,40 +57,176 @@ const menuOptions: MenuOption[] = [
     icon: renderIcon(LibraryIcon),
   },
   {
-    label: () => h(RouterLink, {to: '/profile'}, {default: () => '个人中心'}),
-    key: 'profile',
-    icon: renderIcon(UserIcon),
+    label: () => h(RouterLink, {to: '/favorites'}, {default: () => '我的收藏'}),
+    key: 'favorites',
+    icon: renderIcon(HeartIcon),
   },
 ];
 
 /**
- * 路由同步监听 (核心修复)
- * * @why
- * 原代码仅在 setup 时赋值一次，无法响应浏览器后退/前进操作。
- * 使用 watch 配合 { immediate: true } 确保：
- * 1. 初始化时立即高亮当前菜单。
- * 2. 路由变更时自动更新高亮状态。
+ * 路由同步监听
  */
 watch(
     () => route.name,
     (newRouteName) => {
-      // 增加边界检查：确保路由名称存在且为字符串
       if (newRouteName && typeof newRouteName === 'string') {
         activeKey.value = newRouteName;
       } else {
-        // 可选：处理未知路由的情况，例如清空高亮
         activeKey.value = null;
       }
     },
     {immediate: true}
 );
+
+// 加载歌单列表
+onMounted(() => {
+  playlistStore.fetchPlaylists();
+});
+
+// 创建歌单
+const handleCreatePlaylist = async () => {
+  if (!newPlaylistName.value.trim()) {
+    message.warning('请输入歌单名称');
+    return;
+  }
+  
+  isCreating.value = true;
+  try {
+    await playlistStore.createPlaylist(
+      newPlaylistName.value.trim(),
+      newPlaylistDesc.value.trim() || undefined
+    );
+    message.success('歌单创建成功');
+    showCreateModal.value = false;
+    newPlaylistName.value = '';
+    newPlaylistDesc.value = '';
+  } catch (error) {
+    message.error('创建歌单失败');
+  } finally {
+    isCreating.value = false;
+  }
+};
+
+// 跳转到歌单详情
+const goToPlaylist = (id: number) => {
+  router.push(`/playlist/${id}`);
+};
 </script>
 
 <template>
-  <n-menu
-      v-model:value="activeKey"
-      :collapsed-width="64"
-      :collapsed-icon-size="22"
-      :options="menuOptions"
-  />
+  <div class="sidebar-container">
+    <n-menu
+        v-model:value="activeKey"
+        :collapsed-width="64"
+        :collapsed-icon-size="22"
+        :options="menuOptions"
+    />
+    
+    <n-divider style="margin: 16px 0 8px 0" />
+    
+    <div class="playlist-section">
+      <div class="playlist-header">
+        <span class="playlist-title">我的歌单</span>
+        <n-button quaternary circle size="tiny" @click="showCreateModal = true">
+          <template #icon>
+            <n-icon><AddIcon /></n-icon>
+          </template>
+        </n-button>
+      </div>
+      
+      <div class="playlist-list">
+        <div
+          v-for="playlist in playlistStore.playlists"
+          :key="playlist.id"
+          class="playlist-item"
+          @click="goToPlaylist(playlist.id)"
+        >
+          <n-icon :size="16"><PlaylistIcon /></n-icon>
+          <span class="playlist-name">{{ playlist.name }}</span>
+        </div>
+        <div v-if="playlistStore.playlists.length === 0" class="empty-hint">
+          暂无歌单
+        </div>
+      </div>
+    </div>
+    
+    <!-- 新建歌单弹窗 -->
+    <n-modal
+      v-model:show="showCreateModal"
+      preset="dialog"
+      title="新建歌单"
+      positive-text="创建"
+      negative-text="取消"
+      :positive-button-props="{ loading: isCreating }"
+      @positive-click="handleCreatePlaylist"
+    >
+      <n-form>
+        <n-form-item label="歌单名称" required>
+          <n-input v-model:value="newPlaylistName" placeholder="请输入歌单名称" />
+        </n-form-item>
+        <n-form-item label="歌单描述">
+          <n-input v-model:value="newPlaylistDesc" type="textarea" placeholder="可选" />
+        </n-form-item>
+      </n-form>
+    </n-modal>
+  </div>
 </template>
+
+<style scoped>
+.sidebar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.playlist-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px;
+}
+
+.playlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+}
+
+.playlist-title {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  font-weight: 500;
+}
+
+.playlist-list {
+  margin-top: 4px;
+}
+
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.playlist-item:hover {
+  background-color: var(--n-color-hover);
+}
+
+.playlist-name {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-hint {
+  font-size: 12px;
+  color: var(--n-text-color-3);
+  text-align: center;
+  padding: 16px 0;
+}
+</style>

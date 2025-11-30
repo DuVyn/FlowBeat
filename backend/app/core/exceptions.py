@@ -150,3 +150,30 @@ class NotFoundError(FlowBeatException):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"{resource_name} 不存在或已被删除",
         )
+
+
+class ForbiddenError(FlowBeatException):
+    """
+    权限不足异常
+
+    适用场景:
+    1. 用户无权访问某资源
+    2. 用户无权执行某操作
+    3. 非本人操作的资源
+
+    为什么使用 403 状态码:
+    HTTP 403 Forbidden 表示服务器理解请求但拒绝执行。
+    与 401 的区别是：401 表示未认证，403 表示已认证但权限不足。
+    """
+
+    def __init__(self, detail: str = "无权执行此操作") -> None:
+        """
+        初始化权限异常
+
+        Args:
+            detail: 错误描述
+        """
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=detail,
+        )

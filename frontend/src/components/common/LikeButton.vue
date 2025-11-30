@@ -68,8 +68,8 @@ const toggleLike = async () => {
 
     try {
         if (isLiked.value) {
-            // 目前后端没有实现取消收藏功能
-            // 仅切换前端状态作为 UI 反馈
+            // 取消收藏
+            await musicApi.removeLike(props.musicId);
             isLiked.value = false;
         } else {
             // 上报收藏事件
