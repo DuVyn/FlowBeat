@@ -1,0 +1,28 @@
+/*
+ * 此文件仅用于辅助 IDE (PyCharm/VSCode) 识别 Naive UI 动态注入的 CSS 变量。
+ * 目的：消除 "Unknown CSS property" 误报，并提供代码补全。
+ * 注意：无需在 main.ts 中引入此文件，PyCharm 会自动扫描项目文件索引。
+ */
+
+:root {
+    /* 基础颜色 - 对应图片报错 */
+    --n-primary-color: initial;
+    --n-primary-color-hover: initial;
+    --n-primary-color-pressed: initial;
+
+    /* 文本颜色 */
+    --n-text-color: initial;
+    --n-text-color-1: initial;
+    --n-text-color-2: initial;
+    --n-text-color-3: initial;
+
+    /* 容器与边框 */
+    --n-color: initial;
+    --n-color-hover: initial;
+    --n-border-color: initial;
+
+    /* 其他常用变量 (建议一并补充，方便后续开发) */
+    --n-font-size: initial;
+    --n-border-radius: initial;
+    --n-bezier: initial;
+}
